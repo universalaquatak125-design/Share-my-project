@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>WonderSphere — Curated Educational Facts (Light — Warm Pastels)</title>
+  <style>
+    :root{
+      /* Light + warm pastel palette */
+      --bg: #f8fafb;             /* near-white page background */
+      --card: #ffffff;           /* card background */
+      --muted: #6b7280;          /* soft neutral text */
+      --accent: #ffb4a2;         /* warm coral */
+      --accent-2: #ffd6a5;       /* warm peach */
+      --accent-3: #c3f1e8;       /* mint accent */
+      --glass: rgba(255,255,255,0.6);
+      --glass-2: rgba(255,255,255,0.5);
+      --success: #60d394;
+      --danger: #ff7b7b;
+      --shadow: 0 10px 30px rgba(16,24,32,0.06);
+      --radius:14px;
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    /* Page layout */
+    * { box-sizing: border-box; }
+    html,body{height:100%; margin:0; background:
+      radial-gradient(800px 360px at 0% 10%, rgba(255,210,180,0.12), transparent),
+      radial-gradient(700px 320px at 100% 90%, rgba(195,241,232,0.08), transparent),
+      var(--bg);
+      color:#0b1220; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;}
+    .app{
+      min-height:100vh;
+      display:flex;
+      gap:22px;
+      padding:26px;
+      align-items:flex-start;
+      position:relative;
+    }
+
+    /* Soft animated background canvas */
+    #particlefield{
+      position:fixed; inset:0; z-index:0; pointer-events:none;
+      opacity:0.95;
+    }
+
+    /* Left controls */
+    .panel{
+      width:340px;
+      max-width:36%;
+      min-width:260px;
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:var(--shadow);
+      position:relative;
+      z-index:2;
+      border:1px solid rgba(11,18,32,0.04);
+    }
+    .logo{
+      display:flex; gap:12px; align-items:center; margin-bottom:10px;
+    }
+    .logo .dot{
+      width:48px; height:48px; border-radius:12px; background:linear-gradient(135deg,var(--accent),var(--accent-2)); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size:18px;
+      box-shadow: 0 8px 22px rgba(255,166,140,0.16);
+    }
+    h1{font-size:18px;margin:0; color:#07132a}
+    p.lead{margin:8px 0 14px; color:var(--muted); font-size:13px; line-height:1.35}
+
+    .controls-row{display:flex; gap:8px; margin-bottom:12px}
+    button.btn{
+      background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,250,250,0.9));
+      color:#072033;
+      border:1px solid rgba(11,18,32,0.06);
+      padding:9px 12px; border-radius:10px; cursor:pointer; font-weight:700;
+      transition:transform .12s ease, box-shadow .12s ease;
+      flex:1;
+    }
+    button.btn:active{transform:translateY(1px)}
+    .btn.secondary{background:transparent; color:var(--muted); border:1px solid rgba(11,18,32,0.04); font-weight:600}
+    .search{
+      margin-bottom:14px;
+      display:flex; gap:8px;
+    }
+    .search input{
+      flex:1; padding:10px 12px; border-radius:10px; border:1px solid rgba(11,18,32,0.06); background:linear-gradient(180deg, #ffffff, #fffcfc); color:inherit;
+    }
+
+    .categories{display:flex; flex-wrap:wrap; gap:8px}
+    .cat{
+      padding:6px 10px; border-radius:999px; font-weight:700; font-size:13px; cursor:pointer; color:var(--muted); border:1px solid rgba(11,18,32,0.04);
+      background:transparent;
+    }
+    .cat.active{background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#061018; box-shadow:0 8px 24px rgba(255,168,136,0.08)}
+
+    .small{font-size:12px; color:var(--muted); margin-top:12px}
+
+    /* Content area */
+    .content{
+      flex:1; z-index:2; position:relative;
+      display:flex; flex-direction:column; gap:18px;
+    }
+
+    /* Fact cards */
+    .facts{ display:grid; grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); gap:16px; }
+    .fact{
+      background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.95));
+      border-radius:12px; padding:14px; border:1px solid rgba(11,18,32,0.04);
+      box-shadow: 0 8px 30px rgba(11,18,32,0.04);
+      position:relative; overflow:hidden;
+    }
+    .fact h3{margin:0 0 6px; font-size:15px; color:#07132a}
+    .badge{position:absolute; right:12px; top:12px; display:flex; gap:8px; align-items:center}
+    .favorite{background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:18px}
+    .favorite.active{color:var(--accent)}
+    .cat-label{display:inline-block; font-size:12px; padding:5px 8px; border-radius:999px; background:linear-gradient(90deg, rgba(255,214,200,0.5), rgba(255,245,230,0.5)); color:#6b4b3c; margin-right:8px}
+
+    .fact p{margin:6px 0 10px; color:#102030; font-size:13px; line-height:1.35}
+    .fact .meta{display:flex; gap:8px; align-items:center; justify-content:space-between; color:var(--muted); font-size:12px}
+    .actions{display:flex; gap:8px}
+    .share-btn{background:transparent; border:1px solid rgba(11,18,32,0.04); color:var(--muted); padding:6px 8px; border-radius:8px; cursor:pointer}
+
+    /* Quiz card */
+    .quiz{
+      background:var(--card);
+      border:1px solid rgba(11,18,32,0.04);
+      border-radius:12px; padding:14px; box-shadow:var(--shadow);
+    }
+    .question{font-weight:800; margin-bottom:10px; color:#072033}
+    .options{display:flex; flex-direction:column; gap:8px}
+    .option{padding:10px 12px; background:linear-gradient(180deg,#fff,#fff); border-radius:8px; cursor:pointer; border:1px solid rgba(11,18,32,0.04); text-align:left}
+    .option.correct{outline:2px solid rgba(96,211,148,0.18); background:linear-gradient(90deg, rgba(96,211,148,0.06), transparent)}
+    .option.wrong{outline:2px solid rgba(255,123,123,0.12); background:linear-gradient(90deg, rgba(255,123,123,0.03), transparent)}
+    .quiz-footer{display:flex; gap:8px; align-items:center; margin-top:12px; justify-content:space-between}
+    .progress{color:var(--muted); font-size:13px}
+
+    /* Toast */
+    .toast{
+      position:fixed; left:50%; transform:translateX(-50%); bottom:28px; background:#ffffff; padding:10px 14px; border-radius:10px; color:#042033; border:1px solid rgba(11,18,32,0.06); box-shadow: 0 12px 40px rgba(16,24,32,0.06); z-index:999;
+      display:none;
+    }
+
+    /* Responsive tweaks */
+    @media (max-width:900px){
+      .app{flex-direction:column; padding:16px}
+      .panel{width:100%; max-width:100%}
+      .logo .dot{width:40px;height:40px}
+      .facts{grid-template-columns: repeat(auto-fill,minmax(220px,1fr))}
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particlefield"></canvas>
+
+  <div class="app" role="application" aria-labelledby="app-title">
+    <aside class="panel" aria-label="controls">
+      <div class="logo">
+        <div class="dot" aria-hidden="true">WS</div>
+        <div>
+          <h1 id="app-title">WonderSphere</h1>
+          <p class="lead">Explore curated educational facts across science, space, animals, history, and technology. Facts are provided for learning and general knowledge.</p>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <button id="randomBtn" class="btn" title="Show a random fact">Random Fact</button>
+        <button id="favoritesViewBtn" class="btn secondary" title="Show favorites">Favorites</button>
+      </div>
+
+      <div class="search">
+        <input id="search" type="search" placeholder="Search facts or keywords..." aria-label="Search facts" />
+        <button id="clearSearch" class="btn secondary" title="Clear search">Clear</button>
+      </div>
+
+      <div>
+        <strong style="display:block; margin-bottom:8px; color:#072033">Categories</strong>
+        <div class="categories" id="categories"></div>
+      </div>
+
+      <div class="small" style="margin-top:14px">
+        Tip: Click the star to save favorites. Use the quiz to test recall — scores are tracked locally. Share facts using your device's share sheet or copy to clipboard.
+      </div>
+    </aside>
+
+    <main class="content" aria-live="polite">
+      <section style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;">
+        <div style="flex:1; min-width:320px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:6px;">
+            <h2 style="margin:0; font-size:18px; color:#072033">Facts</h2>
+            <div style="color:var(--muted); font-size:13px">Showing <span id="count">0</span> facts</div>
+          </div>
+
+          <div id="facts" class="facts" aria-live="polite"></div>
+        </div>
+
+        <aside style="width:380px; max-width:40%;">
+          <div class="quiz" id="quizCard" aria-labelledby="quiz-title">
+            <div id="quizIntro">
+              <h3 id="quiz-title" style="margin:0 0 8px; color:#072033">Quick Quiz</h3>
+              <p style="margin:0 0 10px; color:var(--muted)">Test your knowledge. Correct answers are recorded. High score saved locally.</p>
+              <div style="display:flex; gap:8px">
+                <button id="startQuiz" class="btn">Start Quiz</button>
+                <button id="resetHigh" class="btn secondary">Reset High Score</button>
+              </div>
+              <div style="margin-top:8px; color:var(--muted); font-size:13px">High score: <span id="highScore">0</span></div>
+            </div>
+
+            <div id="quizPlay" style="display:none">
+              <div class="question" id="questionText"></div>
+              <div class="options" id="options"></div>
+
+              <div class="quiz-footer">
+                <div class="progress" id="quizProgress"></div>
+                <div>
+                  <button id="nextQ" class="btn secondary" disabled>Next</button>
+                  <button id="quitQuiz" class="btn">Quit</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="quizResult" style="display:none; margin-top:10px">
+              <div style="font-weight:700; font-size:15px" id="resultText"></div>
+              <div style="color:var(--muted); margin-top:8px">Score: <span id="scoreDisplay"></span></div>
+              <div style="display:flex; gap:8px; margin-top:8px">
+                <button id="retryQuiz" class="btn">Play Again</button>
+                <button id="closeResult" class="btn secondary">Close</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:16px"></div>
+
+          <div class="quiz" aria-label="favorites panel">
+            <h3 style="margin:0 0 8px; color:#072033">Favorites</h3>
+            <p style="margin:0 0 10px; color:var(--muted)">Your saved facts (persisted locally).</p>
+            <div id="favoritesList" style="display:grid; gap:8px"></div>
+          </div>
+        </aside>
+      </section>
+
+      <div style="display:flex; gap:12px; align-items:center; justify-content:flex-end;">
+        <div style="color:var(--muted); font-size:13px">Educational content only — not professional advice.</div>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // Curated facts (50 total) across science, space, animals, history, technology.
+    // Each fact: id, category, title, text
+    const FACTS = [
+      // Science (10)
+      {id:'s1', category:'Science', title:'Water expands when it freezes', text:'Most liquids contract when they cool, but water expands as it freezes due to the crystalline structure of ice; this is why ice floats on liquid water.'},
+      {id:'s2', category:'Science', title:'Human genome size', text:'The human genome contains roughly 3 billion base pairs of DNA distributed across 23 chromosome pairs in most human cells.'},
+      {id:'s3', category:'Science', title:'Wave–particle duality of light', text:'Light exhibits both wave-like behavior (interference) and particle-like behavior (photons), a central concept of quantum physics.'},
+      {id:'s4', category:'Science', title:'Plate tectonics shape Earth', text:'Earth’s lithosphere is divided into tectonic plates whose motions drive earthquakes, mountain building, and continental drift.'},
+      {id:'s5', category:'Science', title:'Photosynthesis produces oxygen', text:'Plants, algae, and some bacteria convert sunlight, water, and carbon dioxide into sugars and oxygen through photosynthesis.'},
+      {id:'s6', category:'Science', title:'Speed of light in vacuum', text:'The speed of light in a vacuum is exactly 299,792,458 meters per second; this constant underpins modern physics.'},
+      {id:'s7', category:'Science', title:'Antibiotics target bacteria', text:'Antibiotics are designed to kill or inhibit bacteria; they are not effective against viruses.'},
+      {id:'s8', category:'Science', title:'Vaccination stimulates immunity', text:'Vaccines expose the immune system to antigens so it can recognize and respond faster to future infections.'},
+      {id:'s9', category:'Science', title:'Carbon is central to life', text:'Carbon atoms readily form stable bonds with many elements, making carbon the backbone of organic molecules and life chemistry.'},
+      {id:'s10', category:'Science', title:'Earth atmosphere composition', text:'Earth’s atmosphere is composed mostly of nitrogen (~78%) and oxygen (~21%), with trace amounts of other gases.'},
+
+      // Space (10)
+      {id:'sp1', category:'Space', title:'Sun is a G-type star', text:'The Sun is a G-type main-sequence star (G2V), fusing hydrogen into helium in its core to produce energy.'},
+      {id:'sp2', category:'Space', title:'An astronomical unit (AU)', text:'An astronomical unit (AU) is the average distance from Earth to the Sun, about 149.6 million kilometers.'},
+      {id:'sp3', category:'Space', title:'Moon likely formed by giant impact', text:'The Moon probably formed early in Earth’s history after a Mars-sized body collided with the proto-Earth, ejecting material that coalesced into the Moon.'},
+      {id:'sp4', category:'Space', title:'Jupiter is the largest planet', text:'Jupiter is the Solar System’s largest planet; its strong gravity and magnetic field influence other bodies and retain many moons.'},
+      {id:'sp5', category:'Space', title:'Black holes', text:'A black hole is a region of spacetime with gravity so strong that nothing, not even light, can escape past its event horizon.'},
+      {id:'sp6', category:'Space', title:'Light-year is a distance', text:'A light-year is the distance light travels in one year (about 9.46 trillion kilometers), used to measure interstellar distances.'},
+      {id:'sp7', category:'Space', title:'Olympus Mons on Mars', text:'Olympus Mons is the tallest volcano and mountain in the Solar System, located on Mars; it is shield-type and about three times the height of Mount Everest.'},
+      {id:'sp8', category:'Space', title:'Venus and greenhouse effect', text:'Venus has a dense carbon-dioxide atmosphere that creates an extreme greenhouse effect, making its surface extremely hot.'},
+      {id:'sp9', category:'Space', title:'Cosmic microwave background', text:'The cosmic microwave background is faint radiation left over from the early universe (about 380,000 years after the Big Bang) and has a temperature near 2.7 K.'},
+      {id:'sp10', category:'Space', title:'Exoplanets exist', text:'Thousands of planets orbiting other stars (exoplanets) have been discovered, showing a wide diversity of planetary systems.'},
+
+      // Animals (10)
+      {id:'a1', category:'Animals', title:'Blue whales are the largest animals', text:'Blue whales are the largest animals known to have lived on Earth, reaching lengths over 25 meters and weights of many tens of tonnes.'},
+      {id:'a2', category:'Animals', title:'Birds evolved from dinosaurs', text:'Modern birds evolved from small theropod dinosaurs; many features like feathers and hollow bones show this evolutionary link.'},
+      {id:'a3', category:'Animals', title:'Bees use a waggle dance', text:'Honeybees perform a waggle dance to communicate the direction and distance of food sources to nestmates.'},
+      {id:'a4', category:'Animals', title:'Octopuses are highly intelligent', text:'Octopuses display complex behaviors, problem-solving, and tool use, making them among the most intelligent invertebrates.'},
+      {id:'a5', category:'Animals', title:'Bats are flying mammals', text:'Bats are the only mammals capable of sustained powered flight; their wings are modified forelimbs.'},
+      {id:'a6', category:'Animals', title:'Emperor penguin incubation', text:'Emperor penguins incubate eggs on their feet under a brood pouch during the Antarctic winter to keep eggs warm.'},
+      {id:'a7', category:'Animals', title:'Cheetahs are the fastest land mammals', text:'Cheetahs can accelerate to very high speeds — over 90 km/h — for short bursts when hunting.'},
+      {id:'a8', category:'Animals', title:'Coral reefs are animal-built', text:'Coral reefs are formed by colonies of tiny animals called coral polyps that secrete calcium carbonate skeletons.'},
+      {id:'a9', category:'Animals', title:'Komodo dragons are large lizards', text:'Komodo dragons are the largest living lizards; they deliver a venomous bite and are top predators on the islands they inhabit.'},
+      {id:'a10', category:'Animals', title:'Tardigrades survive extremes', text:'Tardigrades (water bears) can enter cryptobiosis to survive extreme temperatures, radiation, dehydration, and vacuum for long periods.'},
+
+      // History (10)
+      {id:'h1', category:'History', title:'Gutenberg and the printing press', text:'Johannes Gutenberg introduced movable-type printing to Europe around the 1440s, revolutionizing the spread of information.'},
+      {id:'h2', category:'History', title:'Fall of Western Roman Empire (conventional date)', text:'A commonly used date for the fall of the Western Roman Empire is 476 AD, when the last emperor Romulus Augustulus was deposed.'},
+      {id:'h3', category:'History', title:'Mongol Empire under Genghis Khan', text:'In the 13th century, Genghis Khan united Mongol tribes and established an empire that became the largest contiguous land empire in history.'},
+      {id:'h4', category:'History', title:'Industrial Revolution began in Britain', text:'The Industrial Revolution began in 18th-century Britain, introducing mechanized manufacturing and major social change.'},
+      {id:'h5', category:'History', title:'Magna Carta (1215)', text:'The Magna Carta, sealed in 1215, limited royal authority in England and influenced later constitutional developments.'},
+      {id:'h6', category:'History', title:'American Declaration of Independence', text:'The United States Declaration of Independence was adopted on July 4, 1776, asserting the colonies’ intent to form a separate nation.'},
+      {id:'h7', category:'History', title:'Ottoman Empire timeline', text:'The Ottoman Empire existed roughly from around 1299 to 1922, spanning parts of Europe, Asia, and Africa at its height.'},
+      {id:'h8', category:'History', title:'Black Death impact', text:'The Black Death (mid-14th century) caused widespread mortality in Europe and elsewhere; estimates of European population loss commonly range into tens of percent.'},
+      {id:'h9', category:'History', title:'Wright brothers’ first flight', text:'Orville and Wilbur Wright made the first controlled, sustained, powered flight in 1903 at Kitty Hawk, North Carolina.'},
+      {id:'h10', category:'History', title:'ARPANET and the origins of the Internet', text:'The ARPANET, developed in the late 1960s, was an early packet-switched network that led to technologies that became the Internet.'},
+
+      // Technology (10)
+      {id:'t1', category:'Technology', title:"Moore's observation", text:'Gordon Moore observed in 1965 that the number of transistors on integrated circuits tended to double approximately every 18–24 months, a trend known as Moore’s Law.'},
+      {id:'t2', category:'Technology', title:'How GPS determines position', text:'GPS receivers determine location by measuring timing signals from at least four satellites and trilaterating positions using precise atomic-clock timing.'},
+      {id:'t3', category:'Technology', title:'Transistors enabled modern electronics', text:'Transistors replaced vacuum tubes and enabled smaller, more efficient electronic devices, paving the way for modern computers.'},
+      {id:'t4', category:'Technology', title:'Public-key encryption idea', text:'Public-key cryptography (e.g., RSA) relies on mathematical problems — such as factoring large integers — to provide secure key exchange and encryption.'},
+      {id:'t5', category:'Technology', title:'3D printing is additive manufacturing', text:'3D printing builds objects layer-by-layer from digital designs, used in prototyping, manufacturing, and medical implants.'},
+      {id:'t6', category:'Technology', title:'Renewables and energy storage', text:'Solar and wind are renewable energy sources; batteries and other storage systems help manage their intermittency to match supply and demand.'},
+      {id:'t7', category:'Technology', title:'Fiber optics transmit light', text:'Fiber-optic cables transmit data as light pulses through thin strands of glass, enabling high-bandwidth communications over long distances.'},
+      {id:'t8', category:'Technology', title:'Machine learning categories', text:'Machine learning includes supervised and unsupervised methods; deep learning uses multi-layer neural networks to learn complex patterns.'},
+      {id:'t9', category:'Technology', title:'Semiconductor doping', text:'Adding small amounts of impurities to semiconductors (doping) changes their electrical properties and enables diodes and transistors.'},
+      {id:'t10', category:'Technology', title:'The World Wide Web', text:'The World Wide Web was proposed by Tim Berners-Lee in 1989 and implemented with HTTP, HTML, and the first web browser/server.'}
+    ];
+
+    // Categories
+    const CATEGORIES = [...new Set(FACTS.map(f=>f.category))];
+
+    // DOM references
+    const categoriesDiv = document.getElementById('categories');
+    const factsDiv = document.getElementById('facts');
+    const countSpan = document.getElementById('count');
+    const randomBtn = document.getElementById('randomBtn');
+    const searchInput = document.getElementById('search');
+    const clearSearchBtn = document.getElementById('clearSearch');
+    const favoritesViewBtn = document.getElementById('favoritesViewBtn');
+    const toast = document.getElementById('toast');
+
+    // Quiz elements
+    const startQuizBtn = document.getElementById('startQuiz');
+    const quizCard = document.getElementById('quizCard');
+    const quizIntro = document.getElementById('quizIntro');
+    const quizPlay = document.getElementById('quizPlay');
+    const quizResult = document.getElementById('quizResult');
+    const questionText = document.getElementById('questionText');
+    const optionsDiv = document.getElementById('options');
+    const nextQBtn = document.getElementById('nextQ');
+    const quitQuizBtn = document.getElementById('quitQuiz');
+    const retryQuizBtn = document.getElementById('retryQuiz');
+    const closeResultBtn = document.getElementById('closeResult');
+    const quizProgress = document.getElementById('quizProgress');
+    const resultText = document.getElementById('resultText');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const highScoreSpan = document.getElementById('highScore');
+
+    const favoritesListDiv = document.getElementById('favoritesList');
+
+    // App state
+    let activeCategory = null; // null = all
+    let activeSearch = '';
+    let showingFavorites = false;
+    let favorites = new Set(JSON.parse(localStorage.getItem('wondersphere-favorites') || '[]'));
+    let quizQuestions = []; // {q, opts, answerIndex, sourceId}
+    let quizIndex = 0;
+    let quizScore = 0;
+    let quizTaken = false;
+    let quizHighScore = parseInt(localStorage.getItem('wondersphere-highscore') || '0',10) || 0;
+    highScoreSpan.textContent = quizHighScore;
+
+    // Build category controls
+    function renderCategories(){
+      categoriesDiv.innerHTML = '';
+      const allBtn = document.createElement('div');
+      allBtn.className = 'cat' + (activeCategory===null ? ' active' : '');
+      allBtn.textContent = 'All';
+      allBtn.onclick = ()=>{activeCategory=null; showingFavorites=false; updateUI();}
+      categoriesDiv.appendChild(allBtn);
+
+      CATEGORIES.forEach(cat=>{
+        const el = document.createElement('div');
+        el.className = 'cat' + (activeCategory===cat ? ' active' : '');
+        el.textContent = cat;
+        el.onclick = ()=>{ activeCategory = (activeCategory===cat?null:cat); showingFavorites=false; updateUI();};
+        categoriesDiv.appendChild(el);
+      });
+    }
+
+    // Render facts based on filters
+    function getFilteredFacts(){
+      let res = FACTS.slice();
+      if(activeCategory) res = res.filter(f=>f.category===activeCategory);
+      if(activeSearch) {
+        const q = activeSearch.toLowerCase();
+        res = res.filter(f => (f.title + ' ' + f.text).toLowerCase().includes(q));
+      }
+      if(showingFavorites) res = res.filter(f=>favorites.has(f.id));
+      return res;
+    }
+
+    function renderFacts(){
+      const list = getFilteredFacts();
+      factsDiv.innerHTML = '';
+      countSpan.textContent = list.length;
+      if(list.length===0){
+        const empty = document.createElement('div');
+        empty.textContent = 'No facts match your filters.';
+        empty.style.color = 'var(--muted)';
+        factsDiv.appendChild(empty);
+        return;
+      }
+      list.forEach(f=>{
+        const card = document.createElement('article');
+        card.className = 'fact';
+        card.setAttribute('data-id', f.id);
+        card.innerHTML = `
+          <div class="badge">
+            <button class="favorite" title="Toggle favorite" aria-label="Toggle favorite">☆</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <span class="cat-label">${f.category}</span>
+            <h3>${escapeHtml(f.title)}</h3>
+          </div>
+          <p>${escapeHtml(f.text)}</p>
+          <div class="meta">
+            <div style="display:flex; gap:8px; align-items:center">
+              <button class="share-btn" title="Share this fact">Share</button>
+              <button class="share-btn" data-copy title="Copy fact">Copy</button>
+            </div>
+            <div style="font-size:12px; color:var(--muted)"><small>Fact ID: ${f.id}</small></div>
+          </div>
+        `;
+        const favBtn = card.querySelector('.favorite');
+        const shareBtn = card.querySelector('.share-btn');
+        const copyBtn = card.querySelector('[data-copy]');
+
+        // Favorite state
+        if(favorites.has(f.id)){ favBtn.classList.add('active'); favBtn.textContent='★'; }
+        else { favBtn.classList.remove('active'); favBtn.textContent='☆'; }
+
+        favBtn.addEventListener('click', ()=>{
+          if(favorites.has(f.id)){ favorites.delete(f.id); favBtn.classList.remove('active'); favBtn.textContent='☆'; showToast('Removed from favorites'); }
+          else { favorites.add(f.id); favBtn.classList.add('active'); favBtn.textContent='★'; showToast('Saved to favorites'); }
+          localStorage.setItem('wondersphere-favorites', JSON.stringify([...favorites]));
+          renderFavoritesList();
+        });
+
+        // Share handling
+        shareBtn.addEventListener('click', async ()=>{
+          const payload = `${f.title}\n\n${f.text}\n\n— WonderSphere`;
+          if(navigator.share){
+            try{
+              await navigator.share({title: f.title, text: payload});
+              showToast('Shared via device share sheet');
+            }catch(err){
+              // user cancelled or error — fallback
+              copyToClipboard(payload);
+              showToast('Share failed, copied to clipboard');
+            }
+          } else {
+            copyToClipboard(payload);
+            showToast('Copied to clipboard');
+          }
+        });
+
+        copyBtn.addEventListener('click', ()=>{
+          const payload = `${f.title}\n\n${f.text}`;
+          copyToClipboard(payload);
+          showToast('Copied to clipboard');
+        });
+
+        factsDiv.appendChild(card);
+      });
+    }
+
+    // Favorites list in side panel
+    function renderFavoritesList(){
+      favoritesListDiv.innerHTML = '';
+      const favFacts = FACTS.filter(f=>favorites.has(f.id));
+      if(favFacts.length===0){
+        favoritesListDiv.innerHTML = '<div style="color:var(--muted)">No favorites yet. Click the star on a fact to save it here.</div>';
+        return;
+      }
+      favFacts.forEach(f=>{
+        const el = document.createElement('div');
+        el.style.display='flex'; el.style.justifyContent='space-between'; el.style.alignItems='center';
+        el.innerHTML = `<div style="font-size:13px"><strong>${escapeHtml(f.title)}</strong><div style="color:var(--muted); font-size:12px">${f.category}</div></div>
+        <div style="display:flex; gap:6px; align-items:center">
+          <button class="btn" data-show>Show</button>
+          <button class="btn secondary" data-remove>Remove</button>
+        </div>`;
+        el.querySelector('[data-show]').addEventListener('click', ()=>{
+          // show the fact in main area: set search to title and filter
+          showingFavorites=false;
+          activeSearch = f.title;
+          searchInput.value = f.title;
+          updateUI();
+          // highlight
+          setTimeout(()=> {
+            const card = document.querySelector(`[data-id="${f.id}"]`);
+            if(card){
+              card.style.transition='box-shadow .2s ease, transform .18s ease';
+              card.style.boxShadow='0 12px 36px rgba(255,180,162,0.12)';
+              card.style.transform='translateY(-4px)';
+              setTimeout(()=>{card.style.boxShadow=''; card.style.transform='';},800);
+            }
+          },120);
+        });
+        el.querySelector('[data-remove]').addEventListener('click', ()=>{
+          favorites.delete(f.id);
+          localStorage.setItem('wondersphere-favorites', JSON.stringify([...favorites]));
+          renderFacts();
+          renderFavoritesList();
+          showToast('Removed from favorites');
+        });
+        favoritesListDiv.appendChild(el);
+      });
+    }
+
+    // Random fact
+    randomBtn.addEventListener('click', ()=>{
+      const pool = getFilteredFacts();
+      if(pool.length===0){ showToast('No facts available for current filters'); return; }
+      const f = pool[Math.floor(Math.random()*pool.length)];
+      activeSearch = f.title;
+      searchInput.value = f.title;
+      showingFavorites = false;
+      updateUI();
+      showToast('Showing a random fact');
+      // scroll to card
+      setTimeout(()=> {
+        const card = document.querySelector(`[data-id="${f.id}"]`);
+        if(card) card.scrollIntoView({behavior:'smooth', block:'center'});
+      },120);
+    });
+
+    // Search
+    let searchTimer = null;
+    searchInput.addEventListener('input', (e)=>{
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(()=>{
+        activeSearch = e.target.value.trim();
+        showingFavorites = false;
+        updateUI();
+      }, 180);
+    });
+    clearSearchBtn.addEventListener('click', ()=>{
+      searchInput.value='';
+      activeSearch='';
+      showingFavorites=false;
+      updateUI();
+    });
+
+    // Favorites view toggle
+    favoritesViewBtn.addEventListener('click', ()=>{
+      showingFavorites = !showingFavorites;
+      if(showingFavorites){
+        favoritesViewBtn.classList.add('active');
+        favoritesViewBtn.textContent = 'All';
+        activeCategory = null;
+        activeSearch = '';
+        searchInput.value='';
+      } else {
+        favoritesViewBtn.classList.remove('active');
+        favoritesViewBtn.textContent = 'Favorites';
+      }
+      updateUI();
+    });
+
+    // Utility: show toast
+    let toastTimer = null;
+    function showToast(msg, ms=2300){
+      toast.textContent = msg;
+      toast.style.display='block';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=>{ toast.style.display='none'; }, ms);
+    }
+
+    function copyToClipboard(text){
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).catch(()=>{ fallbackCopy(text); });
+      } else fallbackCopy(text);
+    }
+    function fallbackCopy(text){
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta);
+      ta.select(); ta.setSelectionRange(0, 99999);
+      try { document.execCommand('copy'); } catch(e){}
+      ta.remove();
+    }
+
+    // Escape HTML utility
+    function escapeHtml(s){ return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+
+    // Initial render
+    function updateUI(){
+      renderCategories();
+      renderFacts();
+      renderFavoritesList();
+    }
+
+    // ----- Quiz logic -----
+    // Build quiz questions curated from facts (10 questions). Each question references a fact ID.
+    const QUIZ_BANK = [
+      {source:'s6', q:'What is the speed of light in vacuum?', opts:['~300,000 km/s','~30,000 km/s','~3,000 km/s','~3,000,000 km/s'], answer:0},
+      {source:'sp2', q:'What does 1 AU (astronomical unit) approximate?', opts:['Average Earth–Sun distance','Distance light travels in a day','Distance between Earth and Moon','Radius of the Sun'], answer:0},
+      {source:'a1', q:'Which animal is the largest known to have lived?', opts:['Blue whale','African elephant','Argentinosaurus','Giant squid'], answer:0},
+      {source:'a5', q:'Which mammal can perform sustained powered flight?', opts:['Bats','Flying squirrels','Sugar gliders','Pterosaurs (modern)'], answer:0},
+      {source:'s7', q:'Antibiotics are effective against which type of pathogen?', opts:['Bacteria','Viruses','Fungi','Prions'], answer:0},
+      {source:'sp7', q:'What is Olympus Mons?', opts:['A volcano on Mars','A crater on the Moon','An asteroid','A spacecraft'], answer:0},
+      {source:'h1', q:'Who is credited with introducing movable-type printing to Europe?', opts:['Johannes Gutenberg','Isaac Newton','Galileo Galilei','Johann Sebastian Bach'], answer:0},
+      {source:'t1', q:'What did Moore observe about transistors on integrated circuits?', opts:['They roughly double every 18–24 months','They halve every decade','They are fixed in number','They double every 5 years'], answer:0},
+      {source:'t7', q:'How do fiber-optic cables transmit data?', opts:['As light pulses through glass','As electrical current through copper','Using radio waves','With acoustic vibrations'], answer:0},
+      {source:'s4', q:'What geological theory explains continental drift and earthquakes?', opts:['Plate tectonics','Relativity','Quantum theory','Catastrophism'], answer:0},
+    ];
+
+    function startQuiz(){
+      quizQuestions = shuffleArray(QUIZ_BANK.slice());
+      quizIndex = 0; quizScore = 0; quizTaken = true;
+      quizIntro.style.display='none';
+      quizPlay.style.display='block';
+      quizResult.style.display='none';
+      nextQBtn.disabled = true;
+      renderQuizQuestion();
+    }
+
+    function renderQuizQuestion(){
+      const q = quizQuestions[quizIndex];
+      questionText.textContent = `${quizIndex+1}. ${q.q}`;
+      optionsDiv.innerHTML = '';
+      q.opts.forEach((opt, idx)=>{
+        const o = document.createElement('button');
+        o.className = 'option';
+        o.textContent = opt;
+        o.addEventListener('click', ()=> handleAnswer(idx, o));
+        optionsDiv.appendChild(o);
+      });
+      quizProgress.textContent = `Question ${quizIndex+1} of ${quizQuestions.length}`;
+      nextQBtn.disabled = true;
+    }
+
+    function handleAnswer(idx, el){
+      const q = quizQuestions[quizIndex];
+      // Disable all options
+      Array.from(optionsDiv.children).forEach(ch=> ch.disabled = true);
+      // Mark correct/incorrect
+      if(idx === q.answer){
+        el.classList.add('correct'); quizScore++;
+        showToast('Correct!');
+      } else {
+        el.classList.add('wrong');
+        // highlight correct
+        const correctEl = optionsDiv.children[q.answer];
+        if(correctEl) correctEl.classList.add('correct');
+        showToast('Incorrect');
+      }
+      nextQBtn.disabled = false;
+    }
+
+    nextQBtn.addEventListener('click', ()=>{
+      quizIndex++;
+      if(quizIndex >= quizQuestions.length){
+        finishQuiz();
+      } else {
+        renderQuizQuestion();
+      }
+    });
+
+    quitQuizBtn.addEventListener('click', ()=>{
+      endQuizSession();
+    });
+
+    retryQuizBtn.addEventListener('click', ()=>{
+      startQuiz();
+    });
+
+    closeResultBtn.addEventListener('click', ()=>{
+      endQuizSession();
+    });
+
+    function finishQuiz(){
+      quizPlay.style.display='none';
+      quizResult.style.display='block';
+      resultText.textContent = quizScore === quizQuestions.length ? 'Perfect!' : (quizScore >= Math.ceil(quizQuestions.length*0.7) ? 'Great job!' : 'Keep learning!');
+      scoreDisplay.textContent = `${quizScore} / ${quizQuestions.length}`;
+      // store high score
+      if(quizScore > quizHighScore){
+        quizHighScore = quizScore;
+        localStorage.setItem('wondersphere-highscore', String(quizHighScore));
+        highScoreSpan.textContent = quizHighScore;
+        showToast('New high score!');
+      }
+    }
+
+    function endQuizSession(){
+      quizIntro.style.display='block';
+      quizPlay.style.display='none';
+      quizResult.style.display='none';
+    }
+
+    document.getElementById('resetHigh').addEventListener('click', ()=>{
+      quizHighScore = 0;
+      localStorage.setItem('wondersphere-highscore', '0');
+      highScoreSpan.textContent = '0';
+      showToast('High score reset');
+    });
+
+    startQuizBtn.addEventListener('click', startQuiz);
+
+    // Shuffle utility
+    function shuffleArray(arr){
+      for(let i=arr.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [arr[i],arr[j]]=[arr[j],arr[i]];
+      }
+      return arr;
+    }
+
+    // Escape initial UI
+    updateUI();
+
+    // ----- Soft pastel particle background animation -----
+    const canvas = document.getElementById('particlefield');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    function resize(){
+      canvas.width = innerWidth * devicePixelRatio;
+      canvas.height = innerHeight * devicePixelRatio;
+      canvas.style.width = innerWidth + 'px';
+      canvas.style.height = innerHeight + 'px';
+      ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+    }
+    function initParticles(){
+      particles = [];
+      const count = Math.max(60, Math.floor((innerWidth+innerHeight)/16));
+      const colors = ['rgba(255,180,162,0.9)','rgba(255,214,165,0.9)','rgba(198,243,227,0.95)','rgba(238,221,255,0.92)'];
+      for(let i=0;i<count;i++){
+        particles.push({
+          x: Math.random()*innerWidth,
+          y: Math.random()*innerHeight,
+          r: Math.random()*8 + 2,
+          speed: Math.random()*0.4 + 0.08,
+          alpha: 0.35 + Math.random()*0.6,
+          color: colors[Math.floor(Math.random()*colors.length)],
+          drift: (Math.random()-0.5)*0.3
+        });
+      }
+    }
+    function draw(){
+      ctx.clearRect(0,0,innerWidth,innerHeight);
+      // faint warm glow background
+      const g = ctx.createLinearGradient(0,0,innerWidth,innerHeight);
+      g.addColorStop(0,'rgba(255,240,236,0.35)');
+      g.addColorStop(1,'rgba(245,255,252,0.25)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,innerWidth,innerHeight);
+
+      particles.forEach((p,i)=>{
+        p.y -= p.speed;
+        p.x += p.drift + Math.sin((Date.now()/3000) + i)*0.02;
+        if(p.y < -20) p.y = innerHeight + 20;
+        ctx.beginPath();
+        ctx.fillStyle = p.color.replace('0.9', String(p.alpha)).replace('0.95', String(p.alpha)).replace('0.92', String(p.alpha));
+        // soft radial gradient for each particle
+        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r*1.6);
+        grad.addColorStop(0, ctx.fillStyle);
+        grad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = grad;
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        ctx.fill();
+      });
+
+      requestAnimationFrame(draw);
+    }
+    window.addEventListener('resize', ()=>{
+      resize(); initParticles();
+    });
+    resize(); initParticles(); draw();
+
+    // Helpers: show selected fact by scrolling into view handled above in random and favorites.
+
+    // Accessibility: small announcement that facts are educational and curated
+    setTimeout(()=> {
+      const live = document.createElement('div');
+      live.setAttribute('aria-live','polite');
+      live.style.position='absolute'; live.style.left='-9999px';
+      live.textContent = `${FACTS.length} curated facts loaded across ${CATEGORIES.length} categories. Facts are educational and for general knowledge.`;
+      document.body.appendChild(live);
+      setTimeout(()=> live.remove(), 5000);
+    }, 800);
+
+    // Accessibility: keyboard shortcuts: R = random, F = favorites toggle, / = focus search
+    window.addEventListener('keydown', (e)=>{
+      const activeTag = document.activeElement && document.activeElement.tagName;
+      if(activeTag === 'INPUT' || activeTag === 'TEXTAREA') return;
+      if(e.key.toLowerCase()==='r'){ randomBtn.click(); }
+      if(e.key.toLowerCase()==='f'){ favoritesViewBtn.click(); }
+      if(e.key ==='/'){ e.preventDefault(); searchInput.focus(); }
+    });
+
+    // Small utility: prevent accidental text selection on double click of header
+    document.querySelector('.logo').addEventListener('mousedown', (e)=> e.preventDefault());
+
+    // Console note
+    console.log('WonderSphere (light, warm pastels) loaded: curated educational facts. Facts are for learning and general knowledge.');
+  </script>
+</body>
+</html>
